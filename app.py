@@ -69,7 +69,7 @@ if generate_button:
             )
             st.session_state.data = json.loads(response.text)
         except Exception as e:
-            st.error("There was an error communicating with Gemini. Try again!")
+            st.error(f"There was an error: {e}")
 
 # 5. The Output (The App Screen)
 if "data" in st.session_state:
