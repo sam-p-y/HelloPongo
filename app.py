@@ -59,6 +59,7 @@ if generate_button:
         """
         
         try:
+            # Try the primary model first
             response = client.models.generate_content(
                 model='gemini-2.5-flash',
                 contents=prompt,
@@ -68,8 +69,23 @@ if generate_button:
                 )
             )
             st.session_state.data = json.loads(response.text)
-        except Exception as e:
-            st.error(f"There was an error: {e}")
+        except Exception as primary_error:
+            # Fallback to 1.5-flash if 2.5 is overloaded (503)
+            if "503" in str(primary_error):
+                try:
+                    response = client.models.generate_content(
+                        model='gemini-1.5-flash',
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            temperature=0.7
+                        )
+                    )
+                    st.session_state.data = json.loads(response.text)
+                except Exception as fallback_error:
+                    st.error(f"Both models are busy. Error: {fallback_error}")
+            else:
+                st.error(f"There was an error: {primary_error}")
 
 # 5. The Output (The App Screen)
 if "data" in st.session_state:
